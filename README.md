@@ -5,6 +5,9 @@ A free scene asset, including testers for Audiolink and LTCGI. (Requires importi
 
 Enjoy <3
 
+Spawn via Toolbar "BUDDYWORKS -> Avatar Scene"
+
+
 Do not redistribute on its own, can be used for free or commercial projects. Avatar in images not included, believe it or not.
 
 Credit: (Optional)
