@@ -7,10 +7,10 @@ on:
     paths: package.json
 
 env:
-  packageName: "wtf.buddyworks.PACKAGE"
-  packagePath: "Packages/wtf.buddyworks.PACKAGE"
-  packageFileName: "BUDDYWORKS_"
-  packageReleaseName: "BUDDYWORKS "
+  packageName: "wtf.buddyworks.scene"
+  packagePath: "Packages/wtf.buddyworks.scene"
+  packageFileName: "BUDDYWORKS_Scene"
+  packageReleaseName: "BUDDYWORKS Avatar Scene"
 
 permissions:
   contents: write
