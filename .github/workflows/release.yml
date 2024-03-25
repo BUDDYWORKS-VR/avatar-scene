@@ -10,7 +10,7 @@ env:
   packageName: "wtf.buddyworks.scene"
   packagePath: "Packages/wtf.buddyworks.scene"
   packageFileName: "BUDDYWORKS_Scene"
-  packageReleaseName: "BUDDYWORKS Avatar Scene"
+  packageReleaseName: "BUDDYWORKS Scene"
 
 permissions:
   contents: write
