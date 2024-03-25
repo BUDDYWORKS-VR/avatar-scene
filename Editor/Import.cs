@@ -73,7 +73,7 @@ public class BuddyworksScene : MonoBehaviour
         Texture2D floorplaneTexture = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/BUDDYWORKS/Avatar Scene/Textures/Floorplane_Texture.png", typeof(Texture2D));
         GameObject floorplane = GameObject.CreatePrimitive(PrimitiveType.Quad);
         floorplane.transform.SetParent(systemparent.transform);
-        floorplane.transform.Rotate(90.0f, 0.0f, 0.0f, Space.Self);
+        floorplane.transform.Rotate(90.0f, 180.0f, 0.0f, Space.Self);
         Vector3 floorplaneScale = new Vector3(2.0327f, 2.0327f, 2.0327f);
         floorplane.transform.localScale = floorplaneScale;
         floorplaneMaterial.mainTexture = floorplaneTexture;
@@ -86,7 +86,7 @@ public class BuddyworksScene : MonoBehaviour
         lightComp.color = Color.white;
         lightComp.type = LightType.Directional;
         lightComp.shadows = LightShadows.Soft;
-        scenelight.transform.Rotate(50.0f, -30.0f, 0.0f, Space.Self);
+        scenelight.transform.Rotate(50.0f, -200.0f, 0.0f, Space.Self);
         scenelight.transform.SetParent(systemparent.transform);
 
         //Create the Orthographic Camera
