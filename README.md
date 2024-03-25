@@ -1,6 +1,6 @@
 <a href="https://buddyworks.wtf"><img width=50% src="https://splash.buddyworks.wtf/tckAqsHD.png"></img></a>  
 # BUDDYWORKS Default Avatar Scene
-Uuuuh... Shiny!
+*Uuuuh... Shiny!*  
 A free scene asset, including testers for Audiolink and LTCGI. (Requires importing corresponding packages)
 
 Enjoy <3
