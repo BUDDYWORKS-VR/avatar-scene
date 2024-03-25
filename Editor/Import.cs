@@ -120,6 +120,7 @@ public class BuddyworksScene : MonoBehaviour
         Debug.Log(logHeader + logSuccess + "Scene setup finished!");
 
         Debug.Log(logHeader + logInfo + "Saving scene...");
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/BUDDYWORKS/Avatar Scene/Avatar Scene.unity", false);
         Debug.Log(logHeader + logSuccess + "Avatar Scene successfully imported!");
         return;
