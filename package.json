@@ -1,0 +1,14 @@
+{
+  "name" : "wtf.buddyworks.scene",
+  "displayName" : "BUDDYWORKS Avatar Scene",
+  "version" : "2.4.0",
+  "unity" : "2019.4",
+  "description" : "Avatar Scene. Use the toolbar menu to import the template.",
+  "author": {
+    "name": "BUDDYWORKS",
+    "email": "hi@buddyworks.wtf"
+  },
+    "vpmDependencies" : {
+    "com.vrchat.avatars" : "3.x.x"
+  }
+}
