@@ -99,6 +99,7 @@ public class BuddyworksScene : MonoBehaviour
         orthoCamera.transform.position = new Vector3(0f, 0.72f, 3.26f);
         orthoCamera.transform.rotation = Quaternion.Euler(0f, -180f, 0f);
         orthoCamera.transform.SetParent(systemparent.transform);
+        orthoCamera.AddComponent<AudioListener>();
 
         //Instantiate some prefabs, easy enough eh?
 
