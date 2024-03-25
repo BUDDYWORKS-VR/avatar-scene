@@ -86,6 +86,7 @@ public class BuddyworksScene : MonoBehaviour
         lightComp.color = Color.white;
         lightComp.type = LightType.Directional;
         lightComp.shadows = LightShadows.Soft;
+        lightComp.shadowStrength = 0.443f;
         lightComp.intensity = 0.72f;
         scenelight.transform.Rotate(50.0f, -200.0f, 0.0f, Space.Self);
         scenelight.transform.SetParent(systemparent.transform);
