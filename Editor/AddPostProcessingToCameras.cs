@@ -1,3 +1,4 @@
+#if UNITY_2022_OR_NEWER // Change this to the minimum version you want to support
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
@@ -34,3 +35,5 @@ public class AddPostProcessLayerToCameras : Editor
         Debug.Log("Post-process Layer added to all cameras in the scene.");
     }
 }
+
+#endif
