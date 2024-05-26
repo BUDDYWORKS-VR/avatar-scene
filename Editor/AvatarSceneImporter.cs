@@ -24,14 +24,18 @@ public class BuddyworksScene : MonoBehaviour
     static string LTCGIPrefab = "14b5e322766ebe0469a21d9898d446d9";
     static string GestureManagerPrefab = "2cd7c2d73a12a214b930125a1ca4ed33";
 
-    //The main function, copying the scene date over to /Assets/ and generating the various objects.
-    [MenuItem("BUDDYWORKS/Avatar Scene/Add Scene Data", priority = 0)]
-    static void AddBuddyworksScene()
+    //GUI Strings
+    static string upgradeWindowTitle = "BUDDYWORKS Avatar Scene Upgrader";
+    static string upgradeWindowContent = "This will change the currently opened scene to add the BUDDYWORKS Avatar Scene features, do you want to proceed?\n\nThis operation can not be reversed.";
+    static string upgradeWindowContentCompleted = "The scene has been upgraded successfully!\n\nIt will still use your existing lights and cameras, you can find the new ones in _System.";
+
+    [MenuItem("BUDDYWORKS/Avatar Scene/Generate New Scene", priority = 0)]
+    static void AddBuddyworksScene() //The main function, copying the scene date over to /Assets/ and generating the various objects.
     {
         Debug.Log(logInfo + "Starting safety check...");
-        if (safetyCheck(ScenePath)) //Ensures that Avatar Scene is not already in the project at the specified location.
+        if (safetyCheck(SceneFolder)) //Ensures that Avatar Scene is not already in the project at the specified location.
         {
-            copySceneData(); //Copies the scene files over.
+            copySceneData(false); //Copies the scene files over. dropSceneFile false
 
             EditorSceneManager.SaveOpenScenes(); //Saves the current scene, if needed.
             openBuddyworksScene(); //Opens the newly created scene.
@@ -41,51 +45,135 @@ public class BuddyworksScene : MonoBehaviour
             setupSkybox(); //Adjust Skybox
 
             //Creates the _System parent object.
-            Debug.Log(logInfo + "Setting up GameObjects and Prefabs...");
-            GameObject systemParent = new GameObject();
-            systemParent.name = "_System";
+            GameObject systemParent = new GameObject { name = "_System" };
 
             setupFloorplane(systemParent); //Loads Assets for the Floorplane and sets it up in the scene
-            setupLight(systemParent); //Creates a directional light
-            setupCamera(systemParent); //Create the Orthographic Camera
+            setupLight(systemParent, true); //Creates a directional light. Arg1 parent object, Arg2 whenever its active or not.
+            setupCamera(systemParent, true); //Create the Orthographic Camera. Arg1 parent object, Arg2 whenever its active or not.
             setupPostProcessing(); //Adds a PostProcessing Layer to the Scene's camera for Anti Aliasing
 
-            //Instantiate some prefabs, easy enough eh?
+            //Instantiates external prefabs. Arg1 = PrefabGUID, Arg2 = SetActive state, Arg3 = Parent.
             spawnPrefab(AudioLinkAvatarPrefab, false, systemParent);
             spawnPrefab(LTCGIPrefab, false, systemParent);
             spawnPrefab(GestureManagerPrefab, true, systemParent);
  
             Debug.Log(logSuccess + "Scene setup finished!");
 
-            //Workarounds to REALLY make sure the scene is actually saved.
-            Debug.Log(logInfo + "Saving scene...");
-            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), ScenePath, false);
-            Debug.Log(logSuccess + "Avatar Scene successfully imported!");
+            setupSave(false); //isUpgrade false.
+            return;
         }
+        Debug.Log(logAbort + "You already have the scene in your project! The sequence was aborted, no files were changed.");
     }
 
-    //Lets you manually open the scene, if it is still at the specified path. Else its disabled.
-    [MenuItem("BUDDYWORKS/Avatar Scene/Open Scene...", priority = 1)]
-    private static void openBuddyworksScene()
+    [MenuItem("BUDDYWORKS/Avatar Scene/Upgrade Current Scene", priority = 0)]
+    static void UpgradeBuddyworksScene() //Similiar to AddBuddyworksScene(), but upgrades the current scene instead of making a new one.
     {
-        Debug.Log(logInfo + "Opening Scene...");
-        EditorSceneManager.SaveOpenScenes();
-        EditorSceneManager.OpenScene(ScenePath);
-        return;
+        //Spawn a dialog box, asking for confirmation.
+        if(EditorUtility.DisplayDialog(upgradeWindowTitle, upgradeWindowContent, "Upgrade", "Abort")) {
+            //Runs when "Upgrade" is selected.
+            Debug.Log(logInfo + "Starting upgrade...");
+            if (safetyCheck(SceneFolder)) { 
+                copySceneData(true); //Copies the scene files over. dropSceneFile true
+            }
+
+            EditorSceneManager.SaveOpenScenes();
+            Debug.Log(logInfo + "Setting up scene...");
+            setupSkybox(); //Adjust Skybox
+
+            if (GameObject.Find("_System") is GameObject systemCheck) {systemCheck.SetActive(false);} //Disables existing _System GameObject, for when upgrade is applied to already upgraded scene.
+
+            //Creates the _System parent object.
+            GameObject systemParent = new GameObject { name = "_System" };
+            systemParent.transform.SetSiblingIndex(0);
+
+            setupFloorplane(systemParent); //Loads Assets for the Floorplane and sets it up in the scene
+            setupLight(systemParent, false); //Creates a directional light. Arg1 parent object, Arg2 whenever its active or not.
+            setupCamera(systemParent, false); //Create the Orthographic Camera. Arg1 parent object, Arg2 whenever its active or not.
+            setupPostProcessing(); //Adds a PostProcessing Layer to the Scene's camera for Anti Aliasing
+
+            //Instantiates external prefabs. Arg1 = PrefabGUID, Arg2 = SetActive state, Arg3 = Parent.
+            spawnPrefab(AudioLinkAvatarPrefab, false, systemParent);
+            spawnPrefab(LTCGIPrefab, false, systemParent);
+            spawnPrefab(GestureManagerPrefab, true, systemParent);
+
+            Debug.Log(logSuccess + "Scene setup finished!");
+            setupSave(true); //isUpgrade true
+            EditorUtility.DisplayDialog(upgradeWindowTitle, upgradeWindowContentCompleted, "Done");
+            return;
+        }
+        //Runs when "Abort" is selected, or the window is closed.
+        Debug.Log(logInfo + "Upgrade aborted, no files have been changed.");
     }
-    [MenuItem("BUDDYWORKS/Avatar Scene/Open Scene...", true)]
-    private static bool ValidateopenBuddyworksScene()
+
+    [MenuItem("BUDDYWORKS/Avatar Scene/Spawn AudioLink Prefab...", priority = 23)]
+    private static void AudioLinkAvatarPrefabSpawn() //AudioLink Spawner for PostInstallation
     {
-        //Checks whenever the scene exists.
+        spawnPrefabPostSetup(AudioLinkAvatarPrefab);
+    }
+    [MenuItem("BUDDYWORKS/Avatar Scene/Spawn AudioLink Prefab...", true)]
+    private static bool ValidateAudioLinkAvatarPrefabSpawn()
+    {
+        return AssetDatabase.IsValidFolder("Packages/com.llealloo.audiolink") != false;
+    }
+
+    [MenuItem("BUDDYWORKS/Avatar Scene/Spawn LTCGI Prefab...", priority = 24)]
+    private static void LTCGIPrefabSpawn() //LTCGI Spawner for PostInstallation
+    {
+        spawnPrefabPostSetup(LTCGIPrefab);
+    }
+    [MenuItem("BUDDYWORKS/Avatar Scene/Spawn LTCGI Prefab...", true)]
+    private static bool ValidateLTCGIPrefabSpawn()
+    {
+        return AssetDatabase.IsValidFolder("Packages/at.pimaker.ltcgi") != false;
+    }
+
+    private static bool safetyCheck(string path) //Made to avoid calls that would overwrite data or end scripts in errors.
+    {
+        if (System.IO.Directory.Exists(path)) { //Checks whenever the input path exists.
+            return false;
+        }
+        Debug.Log(logSuccess + "No existing scene data found, proceeding...");
+        return true;
+    }
+
+    private static void copySceneData(bool dropSceneFile) //Copies scene files, ARG1 drops the shell .scene file on upgrades.
+    {
+        Debug.Log(logInfo + "Copying assets...");
+        System.IO.Directory.CreateDirectory(BuddyworksPath);
+        FileUtil.CopyFileOrDirectory(BuddyworksPackageID, SceneFolder);
+
+        if(dropSceneFile) {
+            System.IO.File.Delete(ScenePath);
+        }
+
+        DeleteMetaFilesRecursively(SceneFolder);
+    }
+
+    static void setupSave(bool isUpgrade) //Workarounds to REALLY make sure the scene is actually saved.
+    {
+        Debug.Log(logInfo + "Saving scene...");
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene()); //Marks the scene as dirty, making sure that the scene is saved on the next SaveScene call.
+        if(isUpgrade) { //Is upgrading existing scene?
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+            Debug.Log(logSuccess + "Scene successfully upgraded!");
+            return;
+        }
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), ScenePath, false);
+        Debug.Log(logSuccess + "Avatar Scene successfully imported!");
+    }
+    
+    private static void openBuddyworksScene() //Opens the scene. Is only called on AddBuddyworksScene().
+    {
         if (System.IO.File.Exists(ScenePath)) {
-            return true;
+            Debug.Log(logInfo + "Opening Scene...");
+            EditorSceneManager.SaveOpenScenes();
+            EditorSceneManager.OpenScene(ScenePath);
+            return;
         }
-        return false;
+        Debug.LogError(logAbort + "The scene could not be found, something went wrong.");
     }
 
-    //Ensures metafiles are removed in the newly copied folder, avoids conflicts.
-    private static void DeleteMetaFilesRecursively(string folderPath)
+    private static void DeleteMetaFilesRecursively(string folderPath) //Ensures metafiles are removed in the newly copied folder, avoids conflicts.
     {
         string[] files = Directory.GetFiles(folderPath, "*.meta");
         foreach (string file in files)
@@ -101,125 +189,45 @@ public class BuddyworksScene : MonoBehaviour
         AssetDatabase.Refresh();
     }
 
-    private static void spawnPrefab(string guid, bool isDefaultActive, GameObject systemParent)
+    private static void spawnPrefab(string guid, bool isActive, GameObject systemParent) //Contextual prefab spawning function.
     {
         string prefabPath = AssetDatabase.GUIDToAssetPath(guid);
 
-        if (string.IsNullOrEmpty(prefabPath)) {
-            Debug.LogError(logAbort + "Prefab with GUID " + guid + " not found.");
-            return;
-        }
+        if (string.IsNullOrEmpty(prefabPath)) { Debug.LogError(logAbort + "Prefab with GUID " + guid + " not found."); return; }
 
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
         GameObject selectedObject = Selection.activeGameObject;
 
-        if (prefab == null) {
-            Debug.LogError(logAbort + "Failed to load prefab with GUID " + guid + " at path " + prefabPath);
-            return;
-        }
+        if (prefab == null) { Debug.LogError(logAbort + "Failed to load prefab with GUID " + guid + " at path " + prefabPath); return; }
 
         GameObject instantiatedPrefab = (GameObject)PrefabUtility.InstantiatePrefab(prefab, systemParent.transform);
-        instantiatedPrefab.SetActive(isDefaultActive);
+        instantiatedPrefab.SetActive(isActive);
 
-        if (instantiatedPrefab = null) Debug.LogError("Failed to instantiate prefab with GUID " + guid);
+        if (instantiatedPrefab = null) Debug.LogError(logAbort + "Failed to instantiate prefab with GUID " + guid);
     }
 
-    private static void spawnPrefabPostSetup(string guid)
+    private static void spawnPrefabPostSetup(string guid) //Non-contextual prefab spawning function, can be called through menus.
     {
         string prefabPath = AssetDatabase.GUIDToAssetPath(guid);
-
-        if (string.IsNullOrEmpty(prefabPath)) {
-            Debug.LogError(logAbort + "Prefab with GUID " + guid + " not found.");
-            return;
-        }
+        if (string.IsNullOrEmpty(prefabPath)) { Debug.LogError(logAbort + "Prefab with GUID " + guid + " not found."); return; }
 
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
         GameObject selectedObject = Selection.activeGameObject;
 
-        if (prefab == null) {
-            Debug.LogError(logAbort + "Failed to load prefab with GUID " + guid + " at path " + prefabPath);
-            return;
-        }
+        if (prefab == null) { Debug.LogError(logAbort + "Failed to load prefab with GUID " + guid + " at path " + prefabPath); return; }
 
         GameObject instantiatedPrefab = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
 
         if (selectedObject != null) instantiatedPrefab.transform.parent = selectedObject.transform; 
         EditorGUIUtility.PingObject(instantiatedPrefab);
 
-        if (instantiatedPrefab = null) Debug.LogError("Failed to instantiate prefab with GUID " + guid);
+        if (instantiatedPrefab = null) Debug.LogError(logAbort + "Failed to instantiate prefab with GUID " + guid);
     }
 
-    [MenuItem("BUDDYWORKS/Avatar Scene/Enable Scene Anti-Aliasing", priority = 12)]
-    private static void setupPostProcessing()
+    private static void setupFloorplane(GameObject systemParent) //Spawns the signature floorplane.
     {
-        Camera[] cameras = FindObjectsOfType<Camera>();
-        foreach (Camera camera in cameras)
-        {
-            if (camera.GetComponent<PostProcessLayer>() == null) {
-                PostProcessLayer postProcessLayer = camera.gameObject.AddComponent<PostProcessLayer>();
-            }
-            else {
-                Debug.LogWarning(logInfo + "Camera '{camera.name}' already has a Post-process Layer component attached.");
-            }
-        }
-        Debug.Log(logInfo + "Post-process Layer added to all cameras in the scene.");
-    }
-
-    //AudioLink Spawner for PostInstallation
-    [MenuItem("BUDDYWORKS/Avatar Scene/Spawn AudioLink Prefab...", priority = 23)]
-    private static void AudioLinkAvatarPrefabSpawn()
-    {
-        spawnPrefabPostSetup(AudioLinkAvatarPrefab);
-    }
-    [MenuItem("BUDDYWORKS/Avatar Scene/Spawn AudioLink Prefab...", true)]
-    private static bool ValidateAudioLinkAvatarPrefabSpawn()
-    {
-        return AssetDatabase.IsValidFolder("Packages/com.llealloo.audiolink") != false;
-    }
-
-    //LTCGI Spawner for PostInstallation
-    [MenuItem("BUDDYWORKS/Avatar Scene/Spawn LTCGI Prefab...", priority = 24)]
-    private static void LTCGIPrefabSpawn()
-    {
-        spawnPrefabPostSetup(LTCGIPrefab);
-    }
-    [MenuItem("BUDDYWORKS/Avatar Scene/Spawn LTCGI Prefab...", true)]
-    private static bool ValidateLTCGIPrefabSpawn()
-    {
-        return AssetDatabase.IsValidFolder("Packages/at.pimaker.ltcgi") != false;
-    }
-
-    private static void setupSkybox()
-    {
-        Debug.Log(logInfo + "Setting up skybox...");
-        Material skybox = (Material)AssetDatabase.LoadAssetAtPath("Assets/BUDDYWORKS/Avatar Scene/Materials/Skybox_Material.mat", typeof(Material));
-        Texture2D skyboxTexture = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/BUDDYWORKS/Avatar Scene/Textures/Skybox_Texture.psd", typeof(Texture2D));
-        RenderSettings.skybox = skybox;
-
-        string[] keywords = { "_FrontTex", "_BackTex", "_LeftTex", "_RightTex", "_UpTex", "_DownTex" };
-        foreach (string keyword in keywords)
-        {
-            skybox.EnableKeyword(keyword);
-            skybox.SetTexture(keyword, skyboxTexture);
-        }
-        Debug.Log(logSuccess + "Skybox setup finished!");
-    }
-
-    private static bool safetyCheck(string path)
-    {
-        //Checks whenever the scene already exists and aborts execution if it is.
-        if (System.IO.File.Exists(path)) {
-            Debug.Log(logAbort + "You already have the scene in your project! The sequence was aborted, no files were changed.");
-            return false;
-        }
-        Debug.Log(logSuccess + "No existing scene data found, proceeding...");
-        return true;
-    }
-
-    private static void setupFloorplane(GameObject systemParent)
-    {
-        Material floorplaneMaterial = (Material)AssetDatabase.LoadAssetAtPath("Assets/BUDDYWORKS/Avatar Scene/Materials/Floorplane_Material.mat", typeof(Material));
-        Texture2D floorplaneTexture = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/BUDDYWORKS/Avatar Scene/Textures/Floorplane_Texture.png", typeof(Texture2D));
+        Material floorplaneMaterial = (Material)AssetDatabase.LoadAssetAtPath(SceneFolder + "/Materials/Floorplane_Material.mat", typeof(Material));
+        Texture2D floorplaneTexture = (Texture2D)AssetDatabase.LoadAssetAtPath(SceneFolder + "/Textures/Floorplane_Texture.png", typeof(Texture2D));
         GameObject floorplane = GameObject.CreatePrimitive(PrimitiveType.Quad);
         floorplane.transform.SetParent(systemParent.transform);
         floorplane.transform.Rotate(90.0f, 180.0f, 0.0f, Space.Self);
@@ -230,7 +238,7 @@ public class BuddyworksScene : MonoBehaviour
         floorplane.name = "Floorplane";
     }
 
-    private static void setupLight(GameObject systemParent)
+    private static void setupLight(GameObject systemParent, bool isActive) //Sets up a neutral directional light.
     {
         GameObject scenelight = new GameObject("Directional Light");
         Light lightComp = scenelight.AddComponent<Light>();
@@ -242,9 +250,10 @@ public class BuddyworksScene : MonoBehaviour
         scenelight.transform.Rotate(50.0f, -200.0f, 0.0f, Space.Self);
         scenelight.transform.position = new Vector3(0f, 4f, 0f);
         scenelight.transform.SetParent(systemParent.transform);
+        scenelight.SetActive(isActive);
     }
 
-    private static void setupCamera(GameObject systemParent)
+    private static void setupCamera(GameObject systemParent, bool isActive) //Sets up a orthographic camera for the front view Game Window.
     {
         GameObject orthoCamera = new GameObject("Main Camera");
         Camera cameraComponent = orthoCamera.AddComponent<Camera>();
@@ -255,13 +264,45 @@ public class BuddyworksScene : MonoBehaviour
         orthoCamera.transform.SetParent(systemParent.transform);
         orthoCamera.AddComponent<AudioListener>();
         orthoCamera.tag = "MainCamera";
+        orthoCamera.SetActive(isActive);
     }
 
-    private static void copySceneData()
+    private static void setupSkybox() //Sets up the skybox of the scene.
     {
-        Debug.Log(logInfo + "Copying assets...");
-        System.IO.Directory.CreateDirectory(BuddyworksPath);
-        FileUtil.CopyFileOrDirectory(BuddyworksPackageID, SceneFolder);
-        DeleteMetaFilesRecursively(SceneFolder);
+        Debug.Log(logInfo + "Setting up skybox...");
+        Material skybox = (Material)AssetDatabase.LoadAssetAtPath(SceneFolder + "/Materials/Skybox_Material.mat", typeof(Material));
+        Texture2D skyboxTexture = (Texture2D)AssetDatabase.LoadAssetAtPath(SceneFolder + "/Textures/Skybox_Texture.psd", typeof(Texture2D));
+        RenderSettings.skybox = skybox;
+
+        string[] keywords = { "_FrontTex", "_BackTex", "_LeftTex", "_RightTex", "_UpTex", "_DownTex" };
+        foreach (string keyword in keywords)
+        {
+            skybox.EnableKeyword(keyword);
+            skybox.SetTexture(keyword, skyboxTexture);
+        }
+        Debug.Log(logSuccess + "Skybox setup finished!");
+    }
+
+    [MenuItem("BUDDYWORKS/Avatar Scene/Enable Scene Anti-Aliasing", priority = 12)]
+    private static void setupPostProcessing() //Sets up a PostProcessing Layer for all Cameras in the scene that are MainCamera and not part of a prefab.
+    {
+        GameObject[] rootObjects = EditorSceneManager.GetActiveScene().GetRootGameObjects(); //Get all root game objects in the scene
+
+        foreach (GameObject rootObject in rootObjects)
+        {
+            if (PrefabUtility.IsPartOfPrefabInstance(rootObject)) continue; //Skips prefabbed entries.
+            Camera[] cameras = rootObject.GetComponentsInChildren<Camera>(true); //Find cameras attached to the root object and its children.
+
+            foreach (Camera camera in cameras)
+            {
+                //Debug.Log(logInfo + "Found: " + camera.name);
+                if (camera.GetComponent<PostProcessLayer>() == null && camera.CompareTag("MainCamera")) // Add PostProcessLayer component if it doesn't exist, and Camera is MainCamera.
+                {
+                    PostProcessLayer postProcessLayer = camera.gameObject.AddComponent<PostProcessLayer>();
+                    Debug.Log(logInfo + "Added PostProcessing to camera: " + camera.name);
+                }
+            }
+        }
+        Debug.Log(logInfo + "Post-process Layer added to all cameras in the scene.");
     }
 }
