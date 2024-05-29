@@ -1,13 +1,9 @@
 using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
-using System.IO;
 using UnityEditor.SceneManagement;
-using UnityEngine.Rendering.PostProcessing;
 
 namespace Buddyworks.Scene 
 {
-
     public class Compositor : MonoBehaviour
     {
         //I like fancy formatting, but I dont enjoy typing it all the time. Lets not do that.
@@ -17,15 +13,15 @@ namespace Buddyworks.Scene
         public static string logSuccess = logHeader + "<color=green>OK:</color> ";
 
         //Relevant variables, writing the same paths all the time is eh...
-        static string BuddyworksPath = "Assets/BUDDYWORKS";
-        public static string SceneFolder = BuddyworksPath + "/Avatar Scene";
-        public static string ScenePath = BuddyworksPath + "/Avatar Scene/Avatar Scene.unity";
-        static string BuddyworksPackageID = "Packages/wtf.buddyworks.scene/Avatar Scene";
+        static string rootPath = "Assets/BUDDYWORKS";
+        public static string sceneFolder = rootPath + "/Avatar Scene";
+        public static string scenePath = rootPath + "/Avatar Scene/Avatar Scene.unity";
+        static string packageID = "Packages/wtf.buddyworks.scene/Avatar Scene";
 
         //Prefab GUIDs
-        public static string AudioLinkAvatarPrefab = "6e8e0ee5a3655884ea49447ae9e6e665";
-        public static string LTCGIPrefab = "14b5e322766ebe0469a21d9898d446d9";
-        static string GestureManagerPrefab = "2cd7c2d73a12a214b930125a1ca4ed33";
+        public static string prefabAudioLink = "6e8e0ee5a3655884ea49447ae9e6e665";
+        public static string prefabLTCGI = "14b5e322766ebe0469a21d9898d446d9";
+        static string prefabGestureManager = "2cd7c2d73a12a214b930125a1ca4ed33";
 
         //GUI Strings
         static string upgradeWindowTitle = "BUDDYWORKS Avatar Scene Upgrader";
@@ -36,29 +32,26 @@ namespace Buddyworks.Scene
         static void AddBuddyworksScene() //The main function, copying the scene date over to /Assets/ and generating the various objects.
         {
             Debug.Log(logInfo + "Starting safety check...");
-            if (safetyCheck(SceneFolder)) //Ensures that Avatar Scene is not already in the project at the specified location.
+            if (safetyCheck(sceneFolder)) //Ensures that Avatar Scene is not already in the project at the specified location.
             {
                 copySceneData(false); //Copies the scene files over. dropSceneFile false
 
                 EditorSceneManager.SaveOpenScenes(); //Saves the current scene, if needed.
                 Setup.OpenScene(); //Opens the newly created scene.
 
-                //Configure the scene.
-                Debug.Log(logInfo + "Setting up scene...");
+                Debug.Log(logInfo + "Setting up scene...");  //Configure the scene.
+                GameObject systemParent = new GameObject { name = "_System" }; //Creates the _System parent object.
+
                 Setup.Skybox(); //Adjust Skybox
-
-                //Creates the _System parent object.
-                GameObject systemParent = new GameObject { name = "_System" };
-
                 Setup.Floorplane(systemParent); //Loads Assets for the Floorplane and sets it up in the scene
                 Setup.Light(systemParent, true); //Creates a directional light. Arg1 parent object, Arg2 whenever its active or not.
                 Setup.Camera(systemParent, true); //Create the Orthographic Camera. Arg1 parent object, Arg2 whenever its active or not.
                 Setup.PostProcessing(); //Adds a PostProcessing Layer to the Scene's camera for Anti Aliasing
 
                 //Instantiates external prefabs. Arg1 = PrefabGUID, Arg2 = SetActive state, Arg3 = Parent.
-                Spawn.Prefab(AudioLinkAvatarPrefab, false, systemParent);
-                Spawn.Prefab(LTCGIPrefab, false, systemParent);
-                Spawn.Prefab(GestureManagerPrefab, true, systemParent);
+                Spawn.Prefab(prefabAudioLink, false, systemParent);
+                Spawn.Prefab(prefabLTCGI, false, systemParent);
+                Spawn.Prefab(prefabGestureManager, true, systemParent);
      
                 Debug.Log(logSuccess + "Scene setup finished!");
 
@@ -75,13 +68,12 @@ namespace Buddyworks.Scene
             if(EditorUtility.DisplayDialog(upgradeWindowTitle, upgradeWindowContent, "Upgrade", "Abort")) {
                 //Runs when "Upgrade" is selected.
                 Debug.Log(logInfo + "Starting upgrade...");
-                if (safetyCheck(SceneFolder)) { 
+                if (safetyCheck(sceneFolder)) { 
                     copySceneData(true); //Copies the scene files over. dropSceneFile true
                 }
 
                 EditorSceneManager.SaveOpenScenes();
                 Debug.Log(logInfo + "Setting up scene...");
-                Setup.Skybox(); //Adjust Skybox
 
                 if (GameObject.Find("_System") is GameObject systemCheck) {systemCheck.SetActive(false);} //Disables existing _System GameObject, for when upgrade is applied to already upgraded scene.
 
@@ -89,15 +81,16 @@ namespace Buddyworks.Scene
                 GameObject systemParent = new GameObject { name = "_System" };
                 systemParent.transform.SetSiblingIndex(0);
 
+                Setup.Skybox(); //Adjust Skybox
                 Setup.Floorplane(systemParent); //Loads Assets for the Floorplane and sets it up in the scene
                 Setup.Light(systemParent, false); //Creates a directional light. Arg1 parent object, Arg2 whenever its active or not.
                 Setup.Camera(systemParent, false); //Create the Orthographic Camera. Arg1 parent object, Arg2 whenever its active or not.
                 Setup.PostProcessing(); //Adds a PostProcessing Layer to the Scene's camera for Anti Aliasing
 
                 //Instantiates external prefabs. Arg1 = PrefabGUID, Arg2 = SetActive state, Arg3 = Parent.
-                Spawn.Prefab(AudioLinkAvatarPrefab, false, systemParent);
-                Spawn.Prefab(LTCGIPrefab, false, systemParent);
-                Spawn.Prefab(GestureManagerPrefab, true, systemParent);
+                Spawn.Prefab(prefabAudioLink, false, systemParent);
+                Spawn.Prefab(prefabLTCGI, false, systemParent);
+                Spawn.Prefab(prefabGestureManager, true, systemParent);
 
                 Debug.Log(logSuccess + "Scene setup finished!");
                 Setup.Save(true); //isUpgrade true
@@ -120,14 +113,14 @@ namespace Buddyworks.Scene
         private static void copySceneData(bool dropSceneFile) //Copies scene files, ARG1 drops the shell .scene file on upgrades.
         {
             Debug.Log(logInfo + "Copying assets...");
-            System.IO.Directory.CreateDirectory(BuddyworksPath);
-            FileUtil.CopyFileOrDirectory(BuddyworksPackageID, SceneFolder);
+            System.IO.Directory.CreateDirectory(rootPath);
+            FileUtil.CopyFileOrDirectory(packageID, sceneFolder);
 
             if(dropSceneFile) {
-                System.IO.File.Delete(ScenePath);
+                System.IO.File.Delete(scenePath);
             }
 
-            Setup.MetaCleanup(SceneFolder);
+            Setup.MetaCleanup(sceneFolder);
         }
     }
 }

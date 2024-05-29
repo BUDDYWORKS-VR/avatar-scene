@@ -1,42 +1,36 @@
 using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
-using System.IO;
-using UnityEditor.SceneManagement;
-using UnityEngine.Rendering.PostProcessing;
 
 namespace Buddyworks.Scene 
 {
-
     public class Spawn : MonoBehaviour
     {
-
         static string logHeader = Compositor.logHeader;
         static string logAbort = Compositor.logAbort;
         static string logInfo = Compositor.logInfo;
         static string logSuccess = Compositor.logSuccess;
 
-        static string AudioLinkAvatarPrefab = Compositor.AudioLinkAvatarPrefab;
-        static string LTCGIPrefab = Compositor.LTCGIPrefab;
+        static string prefabAudioLink = Compositor.prefabAudioLink;
+        static string prefabLTCGI = Compositor.prefabLTCGI;
 
         [MenuItem("BUDDYWORKS/Avatar Scene/Spawn. AudioLink Prefab...", priority = 23)]
-        private static void AudioLinkAvatarPrefabSpawn() //AudioLink Spawn.er for PostInstallation
+        private static void prefabAudioLinkSpawn() //AudioLink Spawn.er for PostInstallation
         {
-            Spawn.PrefabPostSetup(AudioLinkAvatarPrefab);
+            Spawn.PrefabPostSetup(prefabAudioLink);
         }
         [MenuItem("BUDDYWORKS/Avatar Scene/Spawn. AudioLink Prefab...", true)]
-        private static bool ValidateAudioLinkAvatarPrefabSpawn()
+        private static bool ValidateprefabAudioLinkSpawn()
         {
             return AssetDatabase.IsValidFolder("Packages/com.llealloo.audiolink") != false;
         }
 
         [MenuItem("BUDDYWORKS/Avatar Scene/Spawn. LTCGI Prefab...", priority = 24)]
-        private static void LTCGIPrefabSpawn() //LTCGI Spawn.er for PostInstallation
+        private static void prefabLTCGISpawn() //LTCGI Spawn.er for PostInstallation
         {
-            Spawn.PrefabPostSetup(LTCGIPrefab);
+            Spawn.PrefabPostSetup(prefabLTCGI);
         }
         [MenuItem("BUDDYWORKS/Avatar Scene/Spawn. LTCGI Prefab...", true)]
-        private static bool ValidateLTCGIPrefabSpawn()
+        private static bool ValidateprefabLTCGISpawn()
         {
             return AssetDatabase.IsValidFolder("Packages/at.pimaker.ltcgi") != false;
         }

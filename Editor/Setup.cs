@@ -1,29 +1,26 @@
 using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor.SceneManagement;
 using UnityEngine.Rendering.PostProcessing;
 
 namespace Buddyworks.Scene 
 {
-
     public class Setup : MonoBehaviour
     {
-
         static string logHeader = Compositor.logHeader;
         static string logAbort = Compositor.logAbort;
         static string logInfo = Compositor.logInfo;
         static string logSuccess = Compositor.logSuccess;
 
-        static string SceneFolder = Compositor.SceneFolder;
-        static string ScenePath = Compositor.ScenePath;
+        static string sceneFolder = Compositor.sceneFolder;
+        static string scenePath = Compositor.scenePath;
 
 
         public static void Floorplane(GameObject systemParent) //Spawns the signature floorplane.
         {
-            Material floorplaneMaterial = (Material)AssetDatabase.LoadAssetAtPath(SceneFolder + "/Materials/Floorplane_Material.mat", typeof(Material));
-            Texture2D floorplaneTexture = (Texture2D)AssetDatabase.LoadAssetAtPath(SceneFolder + "/Textures/Floorplane_Texture.png", typeof(Texture2D));
+            Material floorplaneMaterial = (Material)AssetDatabase.LoadAssetAtPath(sceneFolder + "/Materials/Floorplane_Material.mat", typeof(Material));
+            Texture2D floorplaneTexture = (Texture2D)AssetDatabase.LoadAssetAtPath(sceneFolder + "/Textures/Floorplane_Texture.png", typeof(Texture2D));
             GameObject floorplane = GameObject.CreatePrimitive(PrimitiveType.Quad);
             floorplane.transform.SetParent(systemParent.transform);
             floorplane.transform.Rotate(90.0f, 180.0f, 0.0f, Space.Self);
@@ -66,8 +63,8 @@ namespace Buddyworks.Scene
         public static void Skybox() //Sets up the skybox of the scene.
         {
             Debug.Log(logInfo + "Setting up skybox...");
-            Material skybox = (Material)AssetDatabase.LoadAssetAtPath(SceneFolder + "/Materials/Skybox_Material.mat", typeof(Material));
-            Texture2D skyboxTexture = (Texture2D)AssetDatabase.LoadAssetAtPath(SceneFolder + "/Textures/Skybox_Texture.psd", typeof(Texture2D));
+            Material skybox = (Material)AssetDatabase.LoadAssetAtPath(sceneFolder + "/Materials/Skybox_Material.mat", typeof(Material));
+            Texture2D skyboxTexture = (Texture2D)AssetDatabase.LoadAssetAtPath(sceneFolder + "/Textures/Skybox_Texture.psd", typeof(Texture2D));
             RenderSettings.skybox = skybox;
 
             string[] keywords = { "_FrontTex", "_BackTex", "_LeftTex", "_RightTex", "_UpTex", "_DownTex" };
@@ -81,10 +78,10 @@ namespace Buddyworks.Scene
 
         public static void OpenScene() //Opens the scene. Is only called on AddBuddyworksScene().
         {
-            if (System.IO.File.Exists(ScenePath)) {
+            if (System.IO.File.Exists(scenePath)) {
                 Debug.Log(logInfo + "Opening Scene...");
                 EditorSceneManager.SaveOpenScenes();
-                EditorSceneManager.OpenScene(ScenePath);
+                EditorSceneManager.OpenScene(scenePath);
                 return;
             }
             Debug.LogError(logAbort + "The scene could not be found, something went wrong.");
@@ -138,7 +135,7 @@ namespace Buddyworks.Scene
                 Debug.Log(logSuccess + "Scene successfully upgraded!");
                 return;
             }
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), ScenePath, false);
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), scenePath, false);
             Debug.Log(logSuccess + "Avatar Scene successfully imported!");
         }
     }
