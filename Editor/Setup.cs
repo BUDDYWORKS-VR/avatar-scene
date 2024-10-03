@@ -103,6 +103,8 @@ namespace Buddyworks.Scene
                     if (camera.GetComponent<PostProcessLayer>() == null && camera.CompareTag("MainCamera")) // Add PostProcessLayer component if it doesn't exist, and Camera is MainCamera.
                     {
                         PostProcessLayer postProcessLayer = camera.gameObject.AddComponent<PostProcessLayer>();
+                        postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.SubpixelMorphologicalAntialiasing;
+                        postProcessLayer.subpixelMorphologicalAntialiasing.quality = SubpixelMorphologicalAntialiasing.Quality.Medium;
                         Debug.Log(logInfo + "Added PostProcessing to camera: " + camera.name);
                     }
                 }
